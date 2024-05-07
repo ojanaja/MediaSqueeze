@@ -19,6 +19,7 @@
     "expo": "~50.0.17",
     "expo-av": "^13.10.6",
     "expo-blur": "^12.9.2",
+    "expo-file-system": "^16.0.9",
     "expo-font": "^11.10.3",
     "expo-image-picker": "^14.7.1",
     "expo-splash-screen": "^0.26.4",

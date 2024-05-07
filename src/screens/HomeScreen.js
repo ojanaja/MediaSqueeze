@@ -10,6 +10,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
 import { Image as ImageCompressor, Audio as AudioCompressor } from 'react-native-compressor';
+import { FileSystem } from 'expo-file-system';
 
 const HomeScreen = () => {
     const actionSheetRef = useRef();
@@ -147,7 +148,16 @@ const HomeScreen = () => {
                 quality: 0.8, // Adjust quality as needed (0-1)
             };
             const compressedImage = await ImageCompressor.compress(imageUri, options);
-            return compressedImage.uri;
+
+            const filename = compressedImage.filename || 'compressed_image.jpg'; // Set a default filename
+            const path = `${FileSystem.documentDirectory}${filename}`;
+
+            await FileSystem.writeAsync(path, compressedImage.uri, {
+                contentType: 'image/jpeg', // Adjust content type based on image format
+            });
+
+            console.log('Image compressed and saved to:', path);
+            return path; // Return the path of the downloaded image
         } catch (error) {
             console.error('Error compressing image:', error);
             return null; // Handle errors appropriately
@@ -159,10 +169,18 @@ const HomeScreen = () => {
             const compressedRecordings = await Promise.all(
                 recordings.map(async (recording) => {
                     const compressedAudio = await AudioCompressor.compress(recording.file);
+                    const filename = compressedAudio.filename || `compressed_audio_${recording.duration}.mp3`; // Set a default filename with duration
+
+                    const path = `${FileSystem.documentDirectory}${filename}`;
+
+                    await FileSystem.writeAsync(path, compressedAudio.uri, {
+                        contentType: 'audio/mpeg', // Adjust content type based on audio format
+                    });
+
                     return {
                         ...recording,
                         sound: compressedAudio.sound, // Update sound object with compressed audio
-                        file: compressedAudio.uri, // Update file URI with compressed audio
+                        file: path, // Update file URI with downloaded audio path
                     };
                 })
             );
@@ -171,6 +189,7 @@ const HomeScreen = () => {
             console.error('Error compressing audio:', error);
         }
     };
+
 
     return (
         <View style={styles.container}>
