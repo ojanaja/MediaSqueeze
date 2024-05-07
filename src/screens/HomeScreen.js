@@ -9,12 +9,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
-import RecordingPlayer from '../components/RecordingPlayer';
+import { Image as ImageCompressor, Audio as AudioCompressor } from 'react-native-compressor';
 
 const HomeScreen = () => {
     const actionSheetRef = useRef();
     const [selectedImage, setSelectedImage] = useState(null);
     const [recording, setRecording] = useState();
+    const [recordings, setRecordings] = React.useState([]);
     const [compressingAudio, setCompressingAudio] = useState(false);
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const [recordingStopped, setRecordingStopped] = useState(false);
@@ -40,6 +41,36 @@ const HomeScreen = () => {
         }
     }
 
+    function getRecordingLines() {
+        return recordings.map((recordingLine, index) => {
+            return (
+                <View key={index} style={styles.row}>
+                    <Text style={styles.uploadText}>
+                        Recording #{index + 1} | {recordingLine.duration}
+                    </Text>
+                    <View style={styles.playDeleteContainer}>
+                        <TouchableOpacity style={styles.compressButton} onPress={() => recordingLine.sound.replayAsync()}>
+                            <Text style={styles.compressButtonText}>Play</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.compressButton} onPress={() => clearRecordings()}>
+                            <Text style={styles.compressButtonText}>Delete</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            );
+        });
+    }
+
+    function getDurationFormatted(milliseconds) {
+        const minutes = milliseconds / 1000 / 60;
+        const seconds = Math.round((minutes - Math.floor(minutes)) * 60);
+        return seconds < 10 ? `${Math.floor(minutes)}:0${seconds}` : `${Math.floor(minutes)}:${seconds}`
+    }
+
+    function clearRecordings() {
+        setRecordings([])
+    }
+
     async function stopRecording() {
         console.log('Stopping recording..');
         setRecording(undefined);
@@ -47,12 +78,19 @@ const HomeScreen = () => {
         await Audio.setAudioModeAsync({
             allowsRecordingIOS: false,
         });
-        const uri = recording.getURI();
-        console.log('Recording stopped and stored at', uri);
-        // After stopping recording, set compressingAudio state to false to show "Compress Now" button
+        const { sound, status } = await recording.createNewLoadedSoundAsync();
+        let allRecordings = [...recordings];
+        allRecordings.push({
+            sound: sound,
+            duration: getDurationFormatted(status.durationMillis),
+            file: recording.getURI()
+        });
+        setRecordings(allRecordings);
+        console.log('Recording stopped and stored at', recording.getURI());
         setCompressingAudio(false);
         setRecordingStopped(true);
     }
+
 
     const openActionSheet = () => {
         actionSheetRef.current?.show();
@@ -82,15 +120,56 @@ const HomeScreen = () => {
     }
 
     const handleAudioUpload = () => {
-        // Reset selected image when compressing audio
         setSelectedImage(null);
-        setCompressingAudio(true); // Set state to true when compressing audio
+        setCompressingAudio(true);
         closeActionSheet();
     };
 
-    const handleCompressNow = () => {
-        // Implement logic for compressing the selected media
-        console.log('Compress Now pressed');
+    const handleCompressNow = async () => {
+        if (selectedImage) {
+            // Compress image
+            const compressedImageUri = await compressImage(selectedImage);
+            setSelectedImage(compressedImageUri); // Update state with compressed image URI
+            console.log('Image compressed successfully!');
+        } else if (recordings.length > 0) {
+            // Compress audio
+            await compressAudio(recordings);
+            setCompressingAudio(false); // Update state after compression is finished
+            console.log('Audio compressed successfully!');
+        } else {
+            console.log('No media selected for compression');
+        }
+    };
+
+    const compressImage = async (imageUri) => {
+        try {
+            const options = {
+                quality: 0.8, // Adjust quality as needed (0-1)
+            };
+            const compressedImage = await ImageCompressor.compress(imageUri, options);
+            return compressedImage.uri;
+        } catch (error) {
+            console.error('Error compressing image:', error);
+            return null; // Handle errors appropriately
+        }
+    };
+
+    const compressAudio = async (recordings) => {
+        try {
+            const compressedRecordings = await Promise.all(
+                recordings.map(async (recording) => {
+                    const compressedAudio = await AudioCompressor.compress(recording.file);
+                    return {
+                        ...recording,
+                        sound: compressedAudio.sound, // Update sound object with compressed audio
+                        file: compressedAudio.uri, // Update file URI with compressed audio
+                    };
+                })
+            );
+            setRecordings(compressedRecordings);
+        } catch (error) {
+            console.error('Error compressing audio:', error);
+        }
     };
 
     return (
@@ -113,11 +192,11 @@ const HomeScreen = () => {
                     </TouchableOpacity>
                 )}
                 {!selectedImage && !recording && !compressingAudio && !recordingStopped && (
-                    <Text style={styles.noMediaText}>No media selected</Text>
+                    <Text style={[styles.uploadText, { textAlign: 'center', fontSize: 14 }]}>No media selected</Text>
                 )}
                 {(selectedImage || recording || recordingStopped) && !compressingAudio && (
                     <View style={styles.recordingPlayerContainer}>
-                        {recording && <RecordingPlayer recordingURI={recording.getURI()} />}
+                        {getRecordingLines()}
                         <TouchableOpacity style={styles.compressButton} onPress={handleCompressNow}>
                             <Text style={styles.compressButtonText}>Compress Now</Text>
                         </TouchableOpacity>
@@ -141,7 +220,6 @@ const HomeScreen = () => {
             </ActionSheet>
         </View>
     );
-
 };
 
 const styles = StyleSheet.create({
@@ -232,6 +310,22 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: Colors.BLACK,
     },
+    row: {
+        alignSelf: 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: wp('80%')
+    },
+    fill: {
+        flex: 1,
+        margin: 15
+    },
+    playDeleteContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp('2%')
+    }
 });
 
 export default HomeScreen;

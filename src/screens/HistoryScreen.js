@@ -4,7 +4,7 @@ import React from 'react'
 const HistoryScreen = () => {
     return (
         <View>
-            <Text>HistoryScreen</Text>
+            <Text>Coming Soon Feature</Text>
         </View>
     )
 }
