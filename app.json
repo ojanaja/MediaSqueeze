@@ -15,14 +15,25 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow Media Squeeze to access your photos.",
+        "NSPhotoLibraryAddUsageDescription": "Allow Media Squeeze to save photos."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.praksismul.mediasqueeze"
+      "package": "com.praksismul.mediasqueeze",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -47,7 +58,20 @@
         {
           "microphonePermission": "Allow Media Squeeze to access your microphone."
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Media Squeeze to access your photos.",
+          "savePhotosPermission": "Allow Media Squeeze to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2c19eac3-241e-45a7-876a-ae2b6671987f"
+      }
+    }
   }
 }

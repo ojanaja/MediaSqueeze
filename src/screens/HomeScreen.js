@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ToastAndroid } from 'react-native';
 import React, { useRef, useState } from 'react';
 import { Colors } from '../constants/Colors';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -10,7 +10,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
 import { Image as ImageCompressor, Audio as AudioCompressor } from 'react-native-compressor';
-import { FileSystem } from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 
 const HomeScreen = () => {
     const actionSheetRef = useRef();
@@ -128,59 +128,88 @@ const HomeScreen = () => {
 
     const handleCompressNow = async () => {
         if (selectedImage) {
-            // Compress image
             const compressedImageUri = await compressImage(selectedImage);
-            setSelectedImage(compressedImageUri); // Update state with compressed image URI
-            console.log('Image compressed successfully!');
+            if (compressedImageUri) {
+                console.log('Compressed Image URI:', compressedImageUri);
+                const { status } = await MediaLibrary.getPermissionsAsync();
+                if (status !== 'granted') {
+                    const { status: requestStatus } = await MediaLibrary.requestPermissionsAsync();
+                    if (requestStatus !== 'granted') {
+                        console.error('Media Library permission not granted!');
+                        return;
+                    }
+                }
+                await saveToGallery(compressedImageUri);
+            }
         } else if (recordings.length > 0) {
-            // Compress audio
             await compressAudio(recordings);
-            setCompressingAudio(false); // Update state after compression is finished
+            setCompressingAudio(false);
             console.log('Audio compressed successfully!');
+            await saveRecordingsToGallery(recordings);
         } else {
             console.log('No media selected for compression');
         }
     };
 
-    const compressImage = async (imageUri) => {
+    const saveRecordingsToGallery = async (recordings) => {
         try {
-            const options = {
-                quality: 0.8, // Adjust quality as needed (0-1)
-            };
-            const compressedImage = await ImageCompressor.compress(imageUri, options);
+            const { status } = await MediaLibrary.getPermissionsAsync();
+            if (status !== 'granted') {
+                const { status: requestStatus } = await MediaLibrary.requestPermissionsAsync();
+                if (requestStatus !== 'granted') {
+                    console.error('Media Library permission not granted!');
+                    return;
+                }
+            }
 
-            const filename = compressedImage.filename || 'compressed_image.jpg'; // Set a default filename
-            const path = `${FileSystem.documentDirectory}${filename}`;
-
-            await FileSystem.writeAsync(path, compressedImage.uri, {
-                contentType: 'image/jpeg', // Adjust content type based on image format
-            });
-
-            console.log('Image compressed and saved to:', path);
-            return path; // Return the path of the downloaded image
+            await Promise.all(recordings.map(async (recording, index) => {
+                const asset = await MediaLibrary.createAssetAsync(recording.file, `Recording_${index + 1}.mp3`);
+                await MediaLibrary.createAlbumAsync('Recordings', asset, false);
+                ToastAndroid.show(`Recording ${index + 1} saved to files successfully!`, ToastAndroid.SHORT);
+            }));
         } catch (error) {
-            console.error('Error compressing image:', error);
-            return null; // Handle errors appropriately
+            ToastAndroid.show('Error saving recordings to files', ToastAndroid.SHORT);
+            console.error('Error saving recordings to files:', error);
         }
     };
+
+    const saveToGallery = async (uri) => {
+        try {
+            const asset = await MediaLibrary.createAssetAsync(uri);
+            await MediaLibrary.createAlbumAsync('Compressed', asset, false);
+            ToastAndroid.show('Image saved to gallery successfully!', ToastAndroid.SHORT);
+        } catch (error) {
+            ToastAndroid.show('Error saving image to gallery', ToastAndroid.SHORT);
+            console.error('Error saving image to gallery:', error);
+        }
+    };
+
+    const compressImage = async (imageUri) => {
+        console.log("Image URI on compress image", imageUri);
+        try {
+            const options = {
+                quality: 0.8,
+            };
+            const compressedImage = await ImageCompressor.compress(imageUri, options);
+            console.log('Image compressed successfully!');
+            console.log("Image Compressed URI", compressedImage);
+            return compressedImage;
+        } catch (error) {
+            console.error('Error compressing image:', error);
+            return null;
+        }
+    };
+
 
     const compressAudio = async (recordings) => {
         try {
             const compressedRecordings = await Promise.all(
                 recordings.map(async (recording) => {
                     const compressedAudio = await AudioCompressor.compress(recording.file);
-                    const filename = compressedAudio.filename || `compressed_audio_${recording.duration}.mp3`; // Set a default filename with duration
-
-                    const path = `${FileSystem.documentDirectory}${filename}`;
-
-                    await FileSystem.writeAsync(path, compressedAudio.uri, {
-                        contentType: 'audio/mpeg', // Adjust content type based on audio format
-                    });
-
                     return {
                         ...recording,
-                        sound: compressedAudio.sound, // Update sound object with compressed audio
-                        file: path, // Update file URI with downloaded audio path
+                        sound: compressedAudio.sound,
+                        file: compressedAudio.uri,
                     };
                 })
             );
@@ -189,7 +218,6 @@ const HomeScreen = () => {
             console.error('Error compressing audio:', error);
         }
     };
-
 
     return (
         <View style={styles.container}>
