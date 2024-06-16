@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, ToastAndroid } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import React, { useRef, useState } from 'react';
 import { Colors } from '../constants/Colors';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -179,10 +179,10 @@ const HomeScreen = () => {
             await Promise.all(recordings.map(async (recording, index) => {
                 const asset = await MediaLibrary.createAssetAsync(recording.file, `Recording_${index + 1}.mp3`);
                 await MediaLibrary.createAlbumAsync('Recordings', asset, false);
-                ToastAndroid.show(`Recording ${index + 1} saved to files successfully!`, ToastAndroid.SHORT);
+                Alert.alert('Success', `Recording ${index + 1} saved to files successfully!`);
             }));
         } catch (error) {
-            ToastAndroid.show('Error saving recordings to files', ToastAndroid.SHORT);
+            Alert.alert('Error', 'Error saving recordings to files');
             console.error('Error saving recordings to files:', error);
         }
     };
@@ -191,9 +191,9 @@ const HomeScreen = () => {
         try {
             const asset = await MediaLibrary.createAssetAsync(uri);
             await MediaLibrary.createAlbumAsync('Compressed', asset, false);
-            ToastAndroid.show('Image saved to gallery successfully!', ToastAndroid.SHORT);
+            Alert.alert('Success', 'Image saved to gallery successfully!');
         } catch (error) {
-            ToastAndroid.show('Error saving image to gallery', ToastAndroid.SHORT);
+            Alert.alert('Error', 'Error saving image to gallery');
             console.error('Error saving image to gallery:', error);
         }
     };
