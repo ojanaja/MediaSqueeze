@@ -5,7 +5,6 @@ import HistoryScreen from '../screens/HistoryScreen';
 import { StyleSheet } from 'react-native';
 import Fonts from '../constants/Fonts';
 import { Colors } from '../constants/Colors';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Ionicons from '@expo/vector-icons/Ionicons'
 
 const Tab = createBottomTabNavigator();

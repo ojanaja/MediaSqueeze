@@ -114,6 +114,20 @@ const HomeScreen = () => {
         }
     }
 
+    const pickVideoAsync = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+            allowsEditing: true,
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setSelectedImage(result.assets[0].uri);
+        } else {
+            alert('You did not select any image.');
+        }
+    }
+
     function ImageViewer({ placeholderImageSource, selectedImage }) {
         const imageSource = selectedImage ? { uri: selectedImage } : placeholderImageSource;
 
@@ -259,6 +273,10 @@ const HomeScreen = () => {
                 <TouchableOpacity style={styles.actionSheetItem} onPress={pickImageAsync}>
                     <Ionicons name="images" size={24} color={Colors.ORANGE} />
                     <Text style={styles.actionSheetItemText}>Compress Image</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionSheetItem} onPress={pickVideoAsync}>
+                    <Ionicons name="videocam" size={24} color={Colors.ORANGE} />
+                    <Text style={styles.actionSheetItemText}>Compress Video</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionSheetItem} onPress={handleAudioUpload}>
                     <FontAwesome name="microphone" size={24} color={Colors.ORANGE} />

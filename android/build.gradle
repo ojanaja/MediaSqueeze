@@ -38,3 +38,6 @@ allprojects {
         maven { url 'https://www.jitpack.io' }
     }
 }
+// @generated begin ffmpeg-kit-react-native-package - expo prebuild (DO NOT MODIFY) sync-8bd29037bc3f22a8b99eba676388b6e075bb5d28
+ext { ffmpegKitPackage = "full" }
+// @generated end ffmpeg-kit-react-native-package

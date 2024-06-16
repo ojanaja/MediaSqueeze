@@ -11,15 +11,15 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow Media Squeeze to access your photos.",
-        "NSPhotoLibraryAddUsageDescription": "Allow Media Squeeze to save photos."
-      }
+        "NSPhotoLibraryAddUsageDescription": "Allow Media Squeeze to save photos.",
+        "UIBackgroundModes": ["audio"]
+      },
+      "bundleIdentifier": "com.praksismul.mediasqueeze"
     },
     "android": {
       "adaptiveIcon": {
@@ -50,9 +50,7 @@
           ]
         }
       ],
-      [
-        "react-native-compressor"
-      ],
+      ["react-native-compressor"],
       [
         "expo-av",
         {
@@ -65,6 +63,15 @@
           "photosPermission": "Allow Media Squeeze to access your photos.",
           "savePhotosPermission": "Allow Media Squeeze to save photos.",
           "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "@config-plugins/ffmpeg-kit-react-native",
+        {
+          "package": "full",
+          "ios": {
+            "package": "full"
+          }
         }
       ]
     ],
