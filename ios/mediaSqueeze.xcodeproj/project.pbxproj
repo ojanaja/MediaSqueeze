@@ -7,39 +7,39 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		04DF0CA5D9ED41018A0532C1 /* Poppins-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 23FEBBEB51C14BEF97636F5D /* Poppins-Black.ttf */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		1D65CCF2470D4AEE869E3079 /* Poppins-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 307CBEC08A6648E5A3BD8040 /* Poppins-Bold.ttf */; };
-		3E0609F8C8734ED9926D15CB /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = F023DB034B7745B2B18C6042 /* noop-file.swift */; };
+		1DE2B3AA4F044A5D80775BBD /* Poppins-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A4463B79D2A245E4BCCF3B85 /* Poppins-Black.ttf */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		5927DD2FCC974B41B1E2A3BA /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8ABAAA8F602E4E65BCEE87C0 /* Poppins-Regular.ttf */; };
 		96905EF65AED1B983A6B3ABC /* libPods-mediaSqueeze.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-mediaSqueeze.a */; };
+		A8C5E72E19B34BF6B78DFC29 /* Poppins-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B229D953FB2543CE95463F57 /* Poppins-Medium.ttf */; };
+		ACEDA43CB0F54A139BBD992F /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CFC5283D01E847518C153800 /* Poppins-Regular.ttf */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		EF23BF0809D4471FBFE40938 /* Poppins-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E62195D5E27D4A85BB008891 /* Poppins-Medium.ttf */; };
+		C6EF106BF0DD49D291BC85B1 /* Poppins-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0AB3592343AF49F2AA4907FF /* Poppins-Bold.ttf */; };
+		F7514CA04B61493B991EA83F /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = B085113C006D4A2E8D20E4E5 /* noop-file.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0AB3592343AF49F2AA4907FF /* Poppins-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Bold.ttf"; path = "../assets/fonts/Poppins-Bold.ttf"; sourceTree = "<group>"; };
+		13857A3AFA774B99A771F5BF /* mediaSqueeze-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "mediaSqueeze-Bridging-Header.h"; path = "mediaSqueeze/mediaSqueeze-Bridging-Header.h"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* mediaSqueeze.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mediaSqueeze.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = mediaSqueeze/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = mediaSqueeze/AppDelegate.mm; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = mediaSqueeze/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = mediaSqueeze/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = mediaSqueeze/main.m; sourceTree = "<group>"; };
-		23FEBBEB51C14BEF97636F5D /* Poppins-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Black.ttf"; path = "../assets/fonts/Poppins-Black.ttf"; sourceTree = "<group>"; };
-		307CBEC08A6648E5A3BD8040 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Bold.ttf"; path = "../assets/fonts/Poppins-Bold.ttf"; sourceTree = "<group>"; };
 		58EEBF8E8E6FB1BC6CAF49B5 /* libPods-mediaSqueeze.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-mediaSqueeze.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C2E3173556A471DD304B334 /* Pods-mediaSqueeze.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-mediaSqueeze.debug.xcconfig"; path = "Target Support Files/Pods-mediaSqueeze/Pods-mediaSqueeze.debug.xcconfig"; sourceTree = "<group>"; };
 		7A4D352CD337FB3A3BF06240 /* Pods-mediaSqueeze.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-mediaSqueeze.release.xcconfig"; path = "Target Support Files/Pods-mediaSqueeze/Pods-mediaSqueeze.release.xcconfig"; sourceTree = "<group>"; };
-		8ABAAA8F602E4E65BCEE87C0 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Regular.ttf"; path = "../assets/fonts/Poppins-Regular.ttf"; sourceTree = "<group>"; };
+		A4463B79D2A245E4BCCF3B85 /* Poppins-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Black.ttf"; path = "../assets/fonts/Poppins-Black.ttf"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = mediaSqueeze/SplashScreen.storyboard; sourceTree = "<group>"; };
+		B085113C006D4A2E8D20E4E5 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "mediaSqueeze/noop-file.swift"; sourceTree = "<group>"; };
+		B229D953FB2543CE95463F57 /* Poppins-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Medium.ttf"; path = "../assets/fonts/Poppins-Medium.ttf"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CB563EF13BAF4691A69DEA79 /* mediaSqueeze-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "mediaSqueeze-Bridging-Header.h"; path = "mediaSqueeze/mediaSqueeze-Bridging-Header.h"; sourceTree = "<group>"; };
-		E62195D5E27D4A85BB008891 /* Poppins-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Medium.ttf"; path = "../assets/fonts/Poppins-Medium.ttf"; sourceTree = "<group>"; };
+		CFC5283D01E847518C153800 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Regular.ttf"; path = "../assets/fonts/Poppins-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F023DB034B7745B2B18C6042 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "mediaSqueeze/noop-file.swift"; sourceTree = "<group>"; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-mediaSqueeze/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -55,18 +55,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		08D3E97268B84D8A8F4BEE5D /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				23FEBBEB51C14BEF97636F5D /* Poppins-Black.ttf */,
-				307CBEC08A6648E5A3BD8040 /* Poppins-Bold.ttf */,
-				E62195D5E27D4A85BB008891 /* Poppins-Medium.ttf */,
-				8ABAAA8F602E4E65BCEE87C0 /* Poppins-Regular.ttf */,
-			);
-			name = Resources;
-			path = "";
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* mediaSqueeze */ = {
 			isa = PBXGroup;
 			children = (
@@ -77,8 +65,8 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				F023DB034B7745B2B18C6042 /* noop-file.swift */,
-				CB563EF13BAF4691A69DEA79 /* mediaSqueeze-Bridging-Header.h */,
+				B085113C006D4A2E8D20E4E5 /* noop-file.swift */,
+				13857A3AFA774B99A771F5BF /* mediaSqueeze-Bridging-Header.h */,
 			);
 			name = mediaSqueeze;
 			sourceTree = "<group>";
@@ -108,7 +96,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				D65327D7A22EEC0BE12398D9 /* Pods */,
 				D7E4C46ADA2E9064B798F356 /* ExpoModulesProviders */,
-				08D3E97268B84D8A8F4BEE5D /* Resources */,
+				FDAEAFA5E8E3477294DCA052 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -157,6 +145,18 @@
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
+		FDAEAFA5E8E3477294DCA052 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A4463B79D2A245E4BCCF3B85 /* Poppins-Black.ttf */,
+				0AB3592343AF49F2AA4907FF /* Poppins-Bold.ttf */,
+				B229D953FB2543CE95463F57 /* Poppins-Medium.ttf */,
+				CFC5283D01E847518C153800 /* Poppins-Regular.ttf */,
+			);
+			name = Resources;
+			path = "";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -165,13 +165,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "mediaSqueeze" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				64A25C4557FD5BB3C71AA94A /* [Expo] Configure project */,
+				92B2A6B144C56995A95EB8B4 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				CD64A12578BEACA8CDD1B352 /* [CP] Embed Pods Frameworks */,
+				B66A291E3FB34E4CD33A8D73 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -221,10 +221,10 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				04DF0CA5D9ED41018A0532C1 /* Poppins-Black.ttf in Resources */,
-				1D65CCF2470D4AEE869E3079 /* Poppins-Bold.ttf in Resources */,
-				EF23BF0809D4471FBFE40938 /* Poppins-Medium.ttf in Resources */,
-				5927DD2FCC974B41B1E2A3BA /* Poppins-Regular.ttf in Resources */,
+				1DE2B3AA4F044A5D80775BBD /* Poppins-Black.ttf in Resources */,
+				C6EF106BF0DD49D291BC85B1 /* Poppins-Bold.ttf in Resources */,
+				A8C5E72E19B34BF6B78DFC29 /* Poppins-Medium.ttf in Resources */,
+				ACEDA43CB0F54A139BBD992F /* Poppins-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,25 +268,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		64A25C4557FD5BB3C71AA94A /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-mediaSqueeze/expo-configure-project.sh\"\n";
-		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -311,7 +292,26 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-mediaSqueeze/Pods-mediaSqueeze-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		CD64A12578BEACA8CDD1B352 /* [CP] Embed Pods Frameworks */ = {
+		92B2A6B144C56995A95EB8B4 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-mediaSqueeze/expo-configure-project.sh\"\n";
+		};
+		B66A291E3FB34E4CD33A8D73 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -355,7 +355,7 @@
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				3E0609F8C8734ED9926D15CB /* noop-file.swift in Sources */,
+				F7514CA04B61493B991EA83F /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -386,7 +386,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.praksismul.mediasqueeze;
-				PRODUCT_NAME = "mediaSqueeze";
+				PRODUCT_NAME = mediaSqueeze;
 				SWIFT_OBJC_BRIDGING_HEADER = "mediaSqueeze/mediaSqueeze-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -414,7 +414,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.praksismul.mediasqueeze;
-				PRODUCT_NAME = "mediaSqueeze";
+				PRODUCT_NAME = mediaSqueeze;
 				SWIFT_OBJC_BRIDGING_HEADER = "mediaSqueeze/mediaSqueeze-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import React, { useRef, useState } from 'react';
 import { Colors } from '../constants/Colors';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -8,90 +8,34 @@ import ActionSheet from 'react-native-actions-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { Audio } from 'expo-av';
-import { Image as ImageCompressor, Audio as AudioCompressor } from 'react-native-compressor';
+import { Audio, Video } from 'expo-av';
+import { Image as ImageCompressor, Audio as AudioCompressor, Video as VideoCompressor } from 'react-native-compressor';
+import { FFmpegKit, FFmpegKitConfig } from 'ffmpeg-kit-react-native';
 import * as MediaLibrary from 'expo-media-library';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import LottieView from 'lottie-react-native';
+import Modal from "react-native-modal";
+import LoadingAnimation from '../../assets/lottie/Loading.json';
 
 const HomeScreen = () => {
     const actionSheetRef = useRef();
     const [selectedImage, setSelectedImage] = useState(null);
-    const [recording, setRecording] = useState();
-    const [recordings, setRecordings] = React.useState([]);
+    const [selectedAudio, setSelectedAudio] = useState(null);
+    const [selectedVideo, setSelectedVideo] = useState(null);
+    const [recordings, setRecordings] = useState([]);
     const [compressingAudio, setCompressingAudio] = useState(false);
-    const [permissionResponse, requestPermission] = Audio.usePermissions();
-    const [recordingStopped, setRecordingStopped] = useState(false);
-    console.info(selectedImage);
+    const [compressionMethod, setCompressionMethod] = useState(null);
+    const [selectedType, setSelectedType] = useState('')
+    const [isCompressing, setIsCompressing] = useState(false);
 
-    async function startRecording() {
-        try {
-            if (permissionResponse.status !== 'granted') {
-                console.log('Requesting permission..');
-                await requestPermission();
-            }
-            await Audio.setAudioModeAsync({
-                allowsRecordingIOS: true,
-                playsInSilentModeIOS: true,
-            });
-
-            console.log('Starting recording..');
-            const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-            setRecording(recording);
-            console.log('Recording started');
-        } catch (err) {
-            console.error('Failed to start recording', err);
-        }
-    }
-
-    function getRecordingLines() {
-        return recordings.map((recordingLine, index) => {
-            return (
-                <View key={index} style={styles.row}>
-                    <Text style={styles.uploadText}>
-                        Recording #{index + 1} | {recordingLine.duration}
-                    </Text>
-                    <View style={styles.playDeleteContainer}>
-                        <TouchableOpacity style={styles.compressButton} onPress={() => recordingLine.sound.replayAsync()}>
-                            <Text style={styles.compressButtonText}>Play</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.compressButton} onPress={() => clearRecordings()}>
-                            <Text style={styles.compressButtonText}>Delete</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            );
-        });
-    }
+    console.info("Selected", selectedImage);
 
     function getDurationFormatted(milliseconds) {
         const minutes = milliseconds / 1000 / 60;
         const seconds = Math.round((minutes - Math.floor(minutes)) * 60);
         return seconds < 10 ? `${Math.floor(minutes)}:0${seconds}` : `${Math.floor(minutes)}:${seconds}`
     }
-
-    function clearRecordings() {
-        setRecordings([])
-    }
-
-    async function stopRecording() {
-        console.log('Stopping recording..');
-        setRecording(undefined);
-        await recording.stopAndUnloadAsync();
-        await Audio.setAudioModeAsync({
-            allowsRecordingIOS: false,
-        });
-        const { sound, status } = await recording.createNewLoadedSoundAsync();
-        let allRecordings = [...recordings];
-        allRecordings.push({
-            sound: sound,
-            duration: getDurationFormatted(status.durationMillis),
-            file: recording.getURI()
-        });
-        setRecordings(allRecordings);
-        console.log('Recording stopped and stored at', recording.getURI());
-        setCompressingAudio(false);
-        setRecordingStopped(true);
-    }
-
 
     const openActionSheet = () => {
         actionSheetRef.current?.show();
@@ -109,10 +53,13 @@ const HomeScreen = () => {
 
         if (!result.canceled) {
             setSelectedImage(result.assets[0].uri);
+            setSelectedType('image');
+            closeActionSheet();
         } else {
             alert('You did not select any image.');
+            closeActionSheet();
         }
-    }
+    };
 
     const pickVideoAsync = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -122,11 +69,84 @@ const HomeScreen = () => {
         });
 
         if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
+            setSelectedVideo(result.assets[0].uri);
+            setSelectedType('video');
+            closeActionSheet();
         } else {
-            alert('You did not select any image.');
+            alert('You did not select any video.');
+            closeActionSheet();
         }
-    }
+    };
+
+    const pickAudioAsync = async () => {
+        let result = await DocumentPicker.getDocumentAsync({
+            type: 'audio/*',
+        });
+
+        if (result.type === 'success') {
+            setSelectedAudio(result.uri);
+            setRecordings([...recordings, { uri: result.uri, name: result.name }]);
+            setSelectedType('audio');
+            closeActionSheet();
+        } else {
+            alert('You did not select any audio.');
+            closeActionSheet();
+        }
+    };
+
+    const chooseCompressionMethod = () => {
+        const alertOptions = {
+            Cancel: () => { },
+        };
+
+        if (selectedType === 'audio') {
+            alertOptions['LAME MP3'] = async () => {
+                await setCompressionAndHandle('lameMp3');
+            };
+
+            alertOptions['AAC'] = async () => {
+                await setCompressionAndHandle('aac');
+            };
+        } else if (selectedType === 'video') {
+            alertOptions['H.264'] = async () => {
+                await setCompressionAndHandle('h264');
+            };
+
+            alertOptions['H.265'] = async () => {
+                await setCompressionAndHandle('h265');
+            };
+        } else if (selectedType === 'image') {
+            alertOptions['Scale and Pad'] = async () => {
+                await setCompressionAndHandle('scalePad');
+            };
+
+            alertOptions['Scale and Pad 640'] = async () => {
+                await setCompressionAndHandle('scalePad640');
+            };
+        }
+
+        Alert.alert(
+            'Choose Compression Method',
+            'Select a compression method',
+            Object.keys(alertOptions).map(text => ({ text, onPress: alertOptions[text] })),
+            { cancelable: true }
+        );
+    };
+
+    const setCompressionAndHandle = async (method) => {
+        setCompressionMethod(method);
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        if (!compressionMethod) {
+            Alert.alert('Error', 'Compression method not set. Please choose again.', [
+                { text: 'OK' }
+            ]);
+        } else {
+            await handleCompressNow(selectedType);
+        }
+    };
+
 
     function ImageViewer({ placeholderImageSource, selectedImage }) {
         const imageSource = selectedImage ? { uri: selectedImage } : placeholderImageSource;
@@ -134,39 +154,36 @@ const HomeScreen = () => {
         return <Image source={imageSource} style={styles.image} />;
     }
 
-    const handleAudioUpload = () => {
-        setSelectedImage(null);
-        setCompressingAudio(true);
-        closeActionSheet();
-    };
+    const handleCompressNow = async (selectedType) => {
+        let compressedUri = null;
 
-    const handleCompressNow = async () => {
-        if (selectedImage) {
-            const compressedImageUri = await compressImage(selectedImage);
-            if (compressedImageUri) {
-                console.log('Compressed Image URI:', compressedImageUri);
-                const { status } = await MediaLibrary.getPermissionsAsync();
-                if (status !== 'granted') {
-                    const { status: requestStatus } = await MediaLibrary.requestPermissionsAsync();
-                    if (requestStatus !== 'granted') {
-                        console.error('Media Library permission not granted!');
-                        return;
-                    }
-                }
-                await saveToGallery(compressedImageUri);
+        console.log('MediaType: ', selectedType);
+        console.log('Compression Method: ', compressionMethod);
+
+        setIsCompressing(true);
+
+        if (selectedType === 'image' && selectedImage) {
+            if (compressionMethod === 'scalePad') {
+                compressedUri = await compressImageScalePad(selectedImage);
+            } else if (compressionMethod === 'scalePad640') {
+                compressedUri = await compressImageScalePad640(selectedImage);
             }
-        } else if (recordings.length > 0) {
-            await compressAudio(recordings);
-            setCompressingAudio(false);
-            console.log('Audio compressed successfully!');
-            await saveRecordingsToGallery(recordings);
-        } else {
-            console.log('No media selected for compression');
+        } else if (selectedType === 'video' && selectedVideo) {
+            if (compressionMethod === 'h264') {
+                compressedUri = await compressVideoH264(selectedVideo);
+            } else if (compressionMethod === 'h265') {
+                compressedUri = await compressVideoH265(selectedVideo);
+            }
+        } else if (selectedType === 'audio' && selectedAudio) {
+            if (compressionMethod === 'lameMp3') {
+                await compressAudioMp3([{ file: selectedAudio }]);
+            } else if (compressionMethod === 'aac') {
+                await compressAudioAac([{ file: selectedAudio }]);
+            }
+            return;
         }
-    };
 
-    const saveRecordingsToGallery = async (recordings) => {
-        try {
+        if (compressedUri) {
             const { status } = await MediaLibrary.getPermissionsAsync();
             if (status !== 'granted') {
                 const { status: requestStatus } = await MediaLibrary.requestPermissionsAsync();
@@ -175,62 +192,153 @@ const HomeScreen = () => {
                     return;
                 }
             }
-
-            await Promise.all(recordings.map(async (recording, index) => {
-                const asset = await MediaLibrary.createAssetAsync(recording.file, `Recording_${index + 1}.mp3`);
-                await MediaLibrary.createAlbumAsync('Recordings', asset, false);
-                Alert.alert('Success', `Recording ${index + 1} saved to files successfully!`);
-            }));
-        } catch (error) {
-            Alert.alert('Error', 'Error saving recordings to files');
-            console.error('Error saving recordings to files:', error);
+            setIsCompressing(false);
+            await saveToGallery(compressedUri, selectedType);
         }
+
     };
 
-    const saveToGallery = async (uri) => {
+    const saveToGallery = async (uri, selectedType) => {
         try {
             const asset = await MediaLibrary.createAssetAsync(uri);
-            await MediaLibrary.createAlbumAsync('Compressed', asset, false);
-            Alert.alert('Success', 'Image saved to gallery successfully!');
+            const albumName = 'Compressed';
+            let album = await MediaLibrary.getAlbumAsync(albumName);
+            if (album == null) {
+                album = await MediaLibrary.createAlbumAsync(albumName, asset, false);
+            } else {
+                await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+            }
+            Alert.alert('Success', `${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} saved to gallery successfully!`);
         } catch (error) {
-            Alert.alert('Error', 'Error saving image to gallery');
-            console.error('Error saving image to gallery:', error);
+            Alert.alert('Error', 'Error saving media to gallery');
+            console.error('Error saving media to gallery:', error);
         }
     };
 
-    const compressImage = async (imageUri) => {
-        console.log("Image URI on compress image", imageUri);
+    const compressVideoH264 = async (videoUri) => {
         try {
-            const options = {
-                quality: 0.8,
-            };
-            const compressedImage = await ImageCompressor.compress(imageUri, options);
-            console.log('Image compressed successfully!');
-            console.log("Image Compressed URI", compressedImage);
-            return compressedImage;
+            const outputUri = `${FileSystem.cacheDirectory}compressed_video.mp4`;
+            const command = `-i ${videoUri} -vcodec h264 -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
+            await FFmpegKit.execute(command);
+            return outputUri;
+        } catch (error) {
+            console.error('Error compressing video:', error);
+            return null;
+        }
+    };
+
+    const compressVideoH265 = async (videoUri) => {
+        try {
+            const outputUri = `${FileSystem.cacheDirectory}compressed_video.mp4`;
+            const command = `-i ${videoUri} -vcodec hevc -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
+            await FFmpegKit.execute(command);
+            return outputUri;
+        } catch (error) {
+            console.error('Error compressing video:', error);
+            return null;
+        }
+    };
+
+    const compressImageScalePad = async (imageUri) => {
+        try {
+            const outputUri = `${FileSystem.cacheDirectory}compressed_image.jpg`;
+            const command = `-i ${imageUri} -vf "scale='if(gt(iw,ih),-1,iw):if(gt(ih,iw),-1,ih)',pad=ih:ih:(ow-iw)/2:(oh-ih)/2" ${outputUri}`;
+            await FFmpegKit.execute(command);
+            return outputUri;
         } catch (error) {
             console.error('Error compressing image:', error);
             return null;
         }
     };
 
-
-    const compressAudio = async (recordings) => {
+    const compressImageScalePad640 = async (imageUri) => {
         try {
-            const compressedRecordings = await Promise.all(
-                recordings.map(async (recording) => {
-                    const compressedAudio = await AudioCompressor.compress(recording.file);
-                    return {
-                        ...recording,
-                        sound: compressedAudio.sound,
-                        file: compressedAudio.uri,
-                    };
-                })
-            );
+            const outputUri = `${FileSystem.cacheDirectory}compressed_image.jpg`;
+            const command = `-i ${imageUri} -vf "scale='if(gte(iw/ih,1),640,-1)':'if(gte(ih/iw,1),640,-1)',pad=640:640:(ow-iw)/2:(oh-ih)/2" ${outputUri}`;
+            await FFmpegKit.execute(command);
+            return outputUri;
+        } catch (error) {
+            console.error('Error compressing image:', error);
+            return null;
+        }
+    };
+
+    const compressAudioMp3 = async (recordings) => {
+        try {
+            const promises = recordings.map(async (recording, index) => {
+                const outputUri = `${FileSystem.cacheDirectory}compressed_audio.mp3`;
+                const command = `-i ${recording.file} -c:a libmp3lame -q:a 2 ${outputUri}`;
+                await FFmpegKit.execute(command);
+                return {
+                    ...recording,
+                    file: outputUri,
+                };
+            });
+            const compressedRecordings = await Promise.all(promises);
             setRecordings(compressedRecordings);
         } catch (error) {
             console.error('Error compressing audio:', error);
         }
+    };
+
+    const compressAudioAac = async (recordings) => {
+        try {
+            const promises = recordings.map(async (recording, index) => {
+                const outputUri = `${FileSystem.cacheDirectory}compressed_audio.aac`;
+                const command = `-i ${recording.file} -c:a aac -b:a 192k ${outputUri}`;
+                await FFmpegKit.execute(command);
+                return {
+                    ...recording,
+                    file: outputUri,
+                };
+            });
+            const compressedRecordings = await Promise.all(promises);
+            setRecordings(compressedRecordings);
+        } catch (error) {
+            console.error('Error compressing audio:', error);
+        }
+    };
+
+    const playAudio = async (uri) => {
+        try {
+            const { sound } = await Audio.Sound.createAsync({ uri });
+            await sound.playAsync();
+        } catch (error) {
+            console.error('Error playing audio:', error);
+        }
+    };
+
+    const deleteAudio = (index) => {
+        const updatedRecordings = recordings.filter((_, i) => i !== index);
+        setRecordings(updatedRecordings);
+    };
+
+    const getRecordingLines = () => {
+        return recordings.map((recording, index) => (
+            <View key={index} style={styles.row}>
+                <Text style={styles.uploadText}>
+                    {recording.name || `Recording #${index + 1}`}
+                </Text>
+                <View style={styles.playDeleteContainer}>
+                    <TouchableOpacity style={styles.compressButton} onPress={() => playAudio(recording.uri)}>
+                        <Text style={styles.compressButtonText}>Play</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.compressButton} onPress={() => deleteAudio(index)}>
+                        <Text style={styles.compressButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        ));
+    };
+
+    const resetState = () => {
+        setSelectedImage(null);
+        setSelectedAudio(null);
+        setSelectedVideo(null);
+        setRecordings([]);
+        setCompressingAudio(false);
+        setCompressionMethod(null);
+        setSelectedType('');
     };
 
     return (
@@ -247,27 +355,56 @@ const HomeScreen = () => {
                         selectedImage={selectedImage}
                     />
                 )}
-                {recording && (
-                    <TouchableOpacity style={styles.startRecordingButton} onPress={stopRecording}>
-                        <Text style={styles.startRecordingButtonText}>Stop Recording</Text>
-                    </TouchableOpacity>
+                {selectedVideo && (
+                    <Video
+                        source={{ uri: selectedVideo }}
+                        style={styles.mediaPreview}
+                        useNativeControls
+                        resizeMode="contain"
+                        isLooping
+                    />
                 )}
-                {!selectedImage && !recording && !compressingAudio && !recordingStopped && (
-                    <Text style={[styles.uploadText, { textAlign: 'center', fontSize: 14 }]}>No media selected</Text>
-                )}
-                {(selectedImage || recording || recordingStopped) && !compressingAudio && (
-                    <View style={styles.recordingPlayerContainer}>
-                        {getRecordingLines()}
-                        <TouchableOpacity style={styles.compressButton} onPress={handleCompressNow}>
-                            <Text style={styles.compressButtonText}>Compress Now</Text>
-                        </TouchableOpacity>
+                {selectedAudio && (
+                    <View style={styles.audioPreviewContainer}>
+                        {recordings.map((recording, index) => (
+                            <View key={index} style={styles.audioPreview}>
+                                <Text style={styles.audioPreviewText}>{recording.name}</Text>
+                            </View>
+                        ))}
                     </View>
                 )}
-                {compressingAudio && !selectedImage && !recording && (
-                    <TouchableOpacity style={styles.startRecordingButton} onPress={startRecording}>
-                        <Text style={styles.startRecordingButtonText}>Start Recording</Text>
-                    </TouchableOpacity>
+                {selectedAudio && (
+                    <Text style={styles.uploadText}>Audio selected: {selectedAudio}</Text>
                 )}
+                {selectedVideo && (
+                    <Text style={styles.uploadText}>Video selected: {selectedVideo}</Text>
+                )}
+                {!selectedImage && !selectedAudio && !selectedVideo && recordings.length === 0 && (
+                    <Text style={[styles.uploadText, { textAlign: 'center', fontSize: 14 }]}>No media selected</Text>
+                )}
+                {(selectedImage || selectedAudio || selectedVideo || recordings.length > 0) && !compressingAudio && (
+                    isCompressing ? (
+                        <View style={styles.actionButtonsContainerCompressing}>
+                            <LottieView
+                                source={LoadingAnimation}
+                                autoPlay
+                                loop
+                                style={styles.lottieAnimations}
+                            />
+                            <Text style={styles.uploadText}>Compressing Media...</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.actionButtonsContainer}>
+                            <TouchableOpacity style={styles.compressButton} onPress={chooseCompressionMethod}>
+                                <Text style={styles.compressButtonText}>Compress Now</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={resetState} style={styles.refreshButton}>
+                                <FontAwesome name="refresh" size={40} color={Colors.ORANGE} />
+                            </TouchableOpacity>
+                        </View>
+                    )
+                )}
+                {getRecordingLines()}
             </View>
             <ActionSheet ref={actionSheetRef} gestureEnabled={true}>
                 <TouchableOpacity style={styles.actionSheetItem} onPress={pickImageAsync}>
@@ -278,7 +415,7 @@ const HomeScreen = () => {
                     <Ionicons name="videocam" size={24} color={Colors.ORANGE} />
                     <Text style={styles.actionSheetItemText}>Compress Video</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionSheetItem} onPress={handleAudioUpload}>
+                <TouchableOpacity style={styles.actionSheetItem} onPress={pickAudioAsync}>
                     <FontAwesome name="microphone" size={24} color={Colors.ORANGE} />
                     <Text style={styles.actionSheetItemText}>Compress Audio</Text>
                 </TouchableOpacity>
@@ -288,6 +425,47 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
+    lottieAnimations: {
+        width: wp('100%'),
+        height: hp('10%'),
+    },
+    actionButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        marginTop: hp('2%')
+    },
+    actionButtonsContainerCompressing: {
+        flexDirection: 'column',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+    },
+    mediaPreviewContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: hp('2%'),
+    },
+    mediaPreview: {
+        width: wp('85%'),
+        height: hp('40%'),
+        alignSelf: 'center',
+    },
+    audioPreviewContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    audioPreview: {
+        width: wp('80%'),
+        padding: hp('1%'),
+        backgroundColor: Colors.SECONDARY,
+        marginBottom: hp('1%'),
+        borderRadius: 10,
+    },
+    audioPreviewText: {
+        color: Colors.WHITE,
+        fontSize: hp('2%'),
+        fontFamily: Fonts.regular,
+    },
     container: {
         flex: 1,
         backgroundColor: Colors.WHITE,
@@ -321,7 +499,6 @@ const styles = StyleSheet.create({
         borderRadius: wp('3%'),
         elevation: wp('2%'),
         alignSelf: 'center',
-        marginTop: hp('2%')
     },
     startRecordingButton: {
         backgroundColor: Colors.ORANGE,

@@ -71,13 +71,42 @@
           "package": "full",
           "ios": {
             "package": "full"
+          },
+          "android": {
+            "package": "full"
           }
         }
-      ]
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      "expo-build-properties"
     ],
     "extra": {
       "eas": {
         "projectId": "2c19eac3-241e-45a7-876a-ae2b6671987f"
+      },
+      "build": {
+        "preview": {
+          "android": {
+            "buildType": "apk"
+          }
+        },
+        "preview2": {
+          "android": {
+            "gradleCommand": ":app:assembleRelease"
+          }
+        },
+        "preview3": {
+          "developmentClient": true
+        },
+        "preview4": {
+          "distribution": "internal"
+        },
+        "production": {}
       }
     }
   }
