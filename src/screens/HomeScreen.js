@@ -9,14 +9,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio, Video } from 'expo-av';
-import { Image as ImageCompressor, Audio as AudioCompressor, Video as VideoCompressor } from 'react-native-compressor';
 import { FFmpegKit, FFmpegKitConfig } from 'ffmpeg-kit-react-native';
 import * as MediaLibrary from 'expo-media-library';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import LottieView from 'lottie-react-native';
-import Modal from "react-native-modal";
 import LoadingAnimation from '../../assets/lottie/Loading.json';
+import * as Permissions from 'expo-permissions';
 
 const HomeScreen = () => {
     const actionSheetRef = useRef();
@@ -108,19 +107,19 @@ const HomeScreen = () => {
                 await setCompressionAndHandle('aac');
             };
         } else if (selectedType === 'video') {
-            alertOptions['H.264'] = async () => {
+            alertOptions['FFMPEG'] = async () => {
                 await setCompressionAndHandle('h264');
             };
 
-            alertOptions['H.265'] = async () => {
+            alertOptions['DCT'] = async () => {
                 await setCompressionAndHandle('h265');
             };
         } else if (selectedType === 'image') {
-            alertOptions['Scale and Pad'] = async () => {
+            alertOptions['FFMPEG'] = async () => {
                 await setCompressionAndHandle('scalePad');
             };
 
-            alertOptions['Scale and Pad 640'] = async () => {
+            alertOptions['DCT'] = async () => {
                 await setCompressionAndHandle('scalePad640');
             };
         }
@@ -193,7 +192,7 @@ const HomeScreen = () => {
                         return;
                     }
                 }
-                await saveToGallery(compressedUri, selectedType);
+                await saveToGallery(compressedUri);
             }
         } catch (error) {
             setIsCompressing(false);
@@ -202,17 +201,17 @@ const HomeScreen = () => {
         }
     };
 
-    const saveToGallery = async (uri, selectedType) => {
+    const saveToGallery = async (uri) => {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+
+        if (status !== 'granted') {
+            Alert.alert('Permission Denied', 'You need to allow access to the media library to save the video.');
+            return;
+        }
+
         try {
-            const asset = await MediaLibrary.createAssetAsync(uri);
-            const albumName = 'Compressed';
-            let album = await MediaLibrary.getAlbumAsync(albumName);
-            if (album == null) {
-                album = await MediaLibrary.createAlbumAsync(albumName, asset, false);
-            } else {
-                await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
-            }
-            Alert.alert('Success', `${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} saved to gallery successfully!`);
+            await MediaLibrary.createAssetAsync(uri);
+            Alert.alert('Success', 'Media saved to gallery');
         } catch (error) {
             Alert.alert('Error', 'Error saving media to gallery');
             console.error('Error saving media to gallery:', error);
@@ -220,7 +219,6 @@ const HomeScreen = () => {
             setIsCompressing(false);
         }
     };
-
 
     const compressVideoH264 = async (videoUri) => {
         try {
@@ -383,12 +381,6 @@ const HomeScreen = () => {
                             </View>
                         ))}
                     </View>
-                )}
-                {selectedAudio && (
-                    <Text style={styles.uploadText}>Audio selected: {selectedAudio}</Text>
-                )}
-                {selectedVideo && (
-                    <Text style={styles.uploadText}>Video selected: {selectedVideo}</Text>
                 )}
                 {!selectedImage && !selectedAudio && !selectedVideo && recordings.length === 0 && (
                     <Text style={[styles.uploadText, { textAlign: 'center', fontSize: 14 }]}>No media selected</Text>

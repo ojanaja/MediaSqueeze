@@ -26,6 +26,7 @@
     "expo-font": "^11.10.3",
     "expo-image-picker": "^14.7.1",
     "expo-media-library": "~15.9.2",
+    "expo-permissions": "^14.4.0",
     "expo-splash-screen": "^0.26.4",
     "expo-status-bar": "~1.11.1",
     "ffmpeg-kit-react-native": "^6.0.2",
