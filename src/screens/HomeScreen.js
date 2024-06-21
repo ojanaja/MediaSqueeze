@@ -99,11 +99,11 @@ const HomeScreen = () => {
         };
 
         if (selectedType === 'audio') {
-            alertOptions['LAME MP3'] = async () => {
+            alertOptions['FFMPEG'] = async () => {
                 await setCompressionAndHandle('lameMp3');
             };
 
-            alertOptions['AAC'] = async () => {
+            alertOptions['DCT'] = async () => {
                 await setCompressionAndHandle('aac');
             };
         } else if (selectedType === 'video') {
