@@ -1,21 +1,18 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
-import React, { useRef, useState } from 'react';
-import { Colors } from '../constants/Colors';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { Feather } from '@expo/vector-icons';
-import Fonts from '../constants/Fonts';
-import ActionSheet from 'react-native-actions-sheet';
-import { Ionicons } from '@expo/vector-icons';
-import { FontAwesome } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { Audio, Video } from 'expo-av';
-import { FFmpegKit, FFmpegKitConfig } from 'ffmpeg-kit-react-native';
-import * as MediaLibrary from 'expo-media-library';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
+import { FFmpegKit } from 'ffmpeg-kit-react-native';
 import LottieView from 'lottie-react-native';
+import React, { useRef, useState } from 'react';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import ActionSheet from 'react-native-actions-sheet';
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import LoadingAnimation from '../../assets/lottie/Loading.json';
-import * as Permissions from 'expo-permissions';
+import { Colors } from '../constants/Colors';
+import Fonts from '../constants/Fonts';
 
 const HomeScreen = () => {
     const actionSheetRef = useRef();
@@ -119,7 +116,7 @@ const HomeScreen = () => {
                 await setCompressionAndHandle('scalePad');
             };
 
-            alertOptions['DCT'] = async () => {
+            alertOptions['RLE'] = async () => {
                 await setCompressionAndHandle('scalePad640');
             };
         }
@@ -225,7 +222,7 @@ const HomeScreen = () => {
             const outputUri = `${FileSystem.cacheDirectory}compressed_video.mp4`;
             const command = `-i ${videoUri} -vcodec h264 -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
             await FFmpegKit.execute(command);
-            await FileSystem.deleteAsync(videoUri, { idempotent: true });  // Clean up original file
+            await FileSystem.deleteAsync(videoUri, { idempotent: true });
             return outputUri;
         } catch (error) {
             console.error('Error compressing video:', error);
@@ -238,7 +235,7 @@ const HomeScreen = () => {
             const outputUri = `${FileSystem.cacheDirectory}compressed_video.mp4`;
             const command = `-i ${videoUri} -vcodec hevc -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
             await FFmpegKit.execute(command);
-            await FileSystem.deleteAsync(videoUri, { idempotent: true });  // Clean up original file
+            await FileSystem.deleteAsync(videoUri, { idempotent: true });
             return outputUri;
         } catch (error) {
             console.error('Error compressing video:', error);
@@ -262,7 +259,7 @@ const HomeScreen = () => {
     const compressImageScalePad640 = async (imageUri) => {
         try {
             const outputUri = `${FileSystem.cacheDirectory}compressed_image.jpg`;
-            const command = `-i ${imageUri} -vf "scale='if(gte(iw/ih,1),640,-1)':'if(gte(ih/iw,1),640,-1)',pad=640:640:(ow-iw)/2:(oh-ih)/2" ${outputUri}`;
+            const command = `-i ${imageUri} -c bmp -compression rle ${outputUri}`;
             await FFmpegKit.execute(command);
             await FileSystem.deleteAsync(imageUri, { idempotent: true });  // Clean up original file
             return outputUri;
