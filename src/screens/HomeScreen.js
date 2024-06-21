@@ -162,40 +162,44 @@ const HomeScreen = () => {
 
         setIsCompressing(true);
 
-        if (selectedType === 'image' && selectedImage) {
-            if (compressionMethod === 'scalePad') {
-                compressedUri = await compressImageScalePad(selectedImage);
-            } else if (compressionMethod === 'scalePad640') {
-                compressedUri = await compressImageScalePad640(selectedImage);
-            }
-        } else if (selectedType === 'video' && selectedVideo) {
-            if (compressionMethod === 'h264') {
-                compressedUri = await compressVideoH264(selectedVideo);
-            } else if (compressionMethod === 'h265') {
-                compressedUri = await compressVideoH265(selectedVideo);
-            }
-        } else if (selectedType === 'audio' && selectedAudio) {
-            if (compressionMethod === 'lameMp3') {
-                await compressAudioMp3([{ file: selectedAudio }]);
-            } else if (compressionMethod === 'aac') {
-                await compressAudioAac([{ file: selectedAudio }]);
-            }
-            return;
-        }
-
-        if (compressedUri) {
-            const { status } = await MediaLibrary.getPermissionsAsync();
-            if (status !== 'granted') {
-                const { status: requestStatus } = await MediaLibrary.requestPermissionsAsync();
-                if (requestStatus !== 'granted') {
-                    console.error('Media Library permission not granted!');
-                    return;
+        try {
+            if (selectedType === 'image' && selectedImage) {
+                if (compressionMethod === 'scalePad') {
+                    compressedUri = await compressImageScalePad(selectedImage);
+                } else if (compressionMethod === 'scalePad640') {
+                    compressedUri = await compressImageScalePad640(selectedImage);
                 }
+            } else if (selectedType === 'video' && selectedVideo) {
+                if (compressionMethod === 'h264') {
+                    compressedUri = await compressVideoH264(selectedVideo);
+                } else if (compressionMethod === 'h265') {
+                    compressedUri = await compressVideoH265(selectedVideo);
+                }
+            } else if (selectedType === 'audio' && selectedAudio) {
+                if (compressionMethod === 'lameMp3') {
+                    await compressAudioMp3([{ file: selectedAudio }]);
+                } else if (compressionMethod === 'aac') {
+                    await compressAudioAac([{ file: selectedAudio }]);
+                }
+                return;
             }
-            setIsCompressing(false);
-            await saveToGallery(compressedUri, selectedType);
-        }
 
+            if (compressedUri) {
+                const { status } = await MediaLibrary.getPermissionsAsync();
+                if (status !== 'granted') {
+                    const { status: requestStatus } = await MediaLibrary.requestPermissionsAsync();
+                    if (requestStatus !== 'granted') {
+                        console.error('Media Library permission not granted!');
+                        return;
+                    }
+                }
+                await saveToGallery(compressedUri, selectedType);
+            }
+        } catch (error) {
+            setIsCompressing(false);
+            Alert.alert('Error', `Error during compression: ${error.message}`);
+            console.error('Error during compression:', error);
+        }
     };
 
     const saveToGallery = async (uri, selectedType) => {
@@ -212,14 +216,18 @@ const HomeScreen = () => {
         } catch (error) {
             Alert.alert('Error', 'Error saving media to gallery');
             console.error('Error saving media to gallery:', error);
+        } finally {
+            setIsCompressing(false);
         }
     };
+
 
     const compressVideoH264 = async (videoUri) => {
         try {
             const outputUri = `${FileSystem.cacheDirectory}compressed_video.mp4`;
             const command = `-i ${videoUri} -vcodec h264 -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
             await FFmpegKit.execute(command);
+            await FileSystem.deleteAsync(videoUri, { idempotent: true });  // Clean up original file
             return outputUri;
         } catch (error) {
             console.error('Error compressing video:', error);
@@ -232,6 +240,7 @@ const HomeScreen = () => {
             const outputUri = `${FileSystem.cacheDirectory}compressed_video.mp4`;
             const command = `-i ${videoUri} -vcodec hevc -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
             await FFmpegKit.execute(command);
+            await FileSystem.deleteAsync(videoUri, { idempotent: true });  // Clean up original file
             return outputUri;
         } catch (error) {
             console.error('Error compressing video:', error);
@@ -244,6 +253,7 @@ const HomeScreen = () => {
             const outputUri = `${FileSystem.cacheDirectory}compressed_image.jpg`;
             const command = `-i ${imageUri} -vf "scale='if(gt(iw,ih),-1,iw):if(gt(ih,iw),-1,ih)',pad=ih:ih:(ow-iw)/2:(oh-ih)/2" ${outputUri}`;
             await FFmpegKit.execute(command);
+            await FileSystem.deleteAsync(imageUri, { idempotent: true });  // Clean up original file
             return outputUri;
         } catch (error) {
             console.error('Error compressing image:', error);
@@ -256,6 +266,7 @@ const HomeScreen = () => {
             const outputUri = `${FileSystem.cacheDirectory}compressed_image.jpg`;
             const command = `-i ${imageUri} -vf "scale='if(gte(iw/ih,1),640,-1)':'if(gte(ih/iw,1),640,-1)',pad=640:640:(ow-iw)/2:(oh-ih)/2" ${outputUri}`;
             await FFmpegKit.execute(command);
+            await FileSystem.deleteAsync(imageUri, { idempotent: true });  // Clean up original file
             return outputUri;
         } catch (error) {
             console.error('Error compressing image:', error);
