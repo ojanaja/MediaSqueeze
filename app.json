@@ -77,12 +77,6 @@
           }
         }
       ],
-      [
-        "expo-document-picker",
-        {
-          "iCloudContainerEnvironment": "Production"
-        }
-      ],
       "expo-build-properties"
     ],
     "extra": {
