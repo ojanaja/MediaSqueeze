@@ -7,7 +7,7 @@ import * as MediaLibrary from 'expo-media-library';
 import { FFmpegKit } from 'ffmpeg-kit-react-native';
 import LottieView from 'lottie-react-native';
 import React, { useRef, useState } from 'react';
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ActionSheet from 'react-native-actions-sheet';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import LoadingAnimation from '../../assets/lottie/Loading.json';
@@ -77,11 +77,12 @@ const HomeScreen = () => {
             type: 'audio/*',
         });
 
-        if (result.type === 'success') {
-            setSelectedAudio(result.uri);
+        if (!result.canceled) {
+            setSelectedAudio(result.assets[0].uri);
             setSelectedType('audio');
             closeActionSheet();
         } else {
+            console.error('Audio selection failed:', result);
             alert('You did not select any audio.');
             closeActionSheet();
         }
@@ -150,9 +151,6 @@ const HomeScreen = () => {
     const handleCompressNow = async (selectedType) => {
         let compressedUri = null;
 
-        console.log('MediaType: ', selectedType);
-        console.log('Compression Method: ', compressionMethod);
-
         setIsCompressing(true);
 
         try {
@@ -170,32 +168,29 @@ const HomeScreen = () => {
                 }
             } else if (selectedType === 'audio' && selectedAudio) {
                 if (compressionMethod === 'huffmanCoding') {
-                    await compressAudioHuffmanCoding([{ file: selectedAudio }]);
+                    const compressedAudioUri = await compressAudioHuffmanCoding(selectedAudio);
+                    await saveToDocuments(compressedAudioUri);
                 } else if (compressionMethod === 'entropyCoding') {
-                    await compressAudioEntropyCoding([{ file: selectedAudio }]);
+                    const compressedAudioUri = await compressAudioEntropyCoding(selectedAudio);
+                    await saveToDocuments(compressedAudioUri);
+                    return;
                 }
-                return;
             }
 
             if (compressedUri) {
-                const { status } = await MediaLibrary.getPermissionsAsync();
-                if (status !== 'granted') {
-                    const { status: requestStatus } = await MediaLibrary.requestPermissionsAsync();
-                    if (requestStatus !== 'granted') {
-                        console.error('Media Library permission not granted!');
-                        return;
-                    }
-                }
-                await saveToGallery(compressedUri);
+                await saveToMediaLibrary(compressedUri);
+                await saveToDocuments(compressedUri);
             }
         } catch (error) {
             setIsCompressing(false);
             Alert.alert('Error', `Error during compression: ${error.message}`);
             console.error('Error during compression:', error);
+        } finally {
+            setIsCompressing(false);
         }
     };
 
-    const saveToGallery = async (uri) => {
+    const saveToMediaLibrary = async (uri) => {
         const { status } = await MediaLibrary.requestPermissionsAsync();
 
         if (status !== 'granted') {
@@ -209,15 +204,26 @@ const HomeScreen = () => {
         } catch (error) {
             Alert.alert('Error', 'Error saving media to gallery');
             console.error('Error saving media to gallery:', error);
-        } finally {
-            setIsCompressing(false);
+        }
+    };
+
+    const saveToDocuments = async (uri) => {
+        try {
+            const asset = await MediaLibrary.createAssetAsync(uri);
+
+            console.log('Saved file URI:', asset.uri);
+
+            Alert.alert('Success', 'Media saved to device.');
+        } catch (error) {
+            Alert.alert('Error', `Error saving media: ${error.message}`);
+            console.error('Error saving media:', error);
         }
     };
 
     const compressVideoEntropyCoding = async (videoUri) => {
         try {
-            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('mkv')}`;
-            const command = `-i ${videoUri} -c:v ffv1 -level 3 ${outputUri}`;
+            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('mp4')}`;
+            const command = `-i ${videoUri} -vcodec h264 -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
             await FFmpegKit.execute(command);
             await FileSystem.deleteAsync(videoUri, { idempotent: true });
             return outputUri;
@@ -230,8 +236,8 @@ const HomeScreen = () => {
 
     const compressVideoRLE = async (videoUri) => {
         try {
-            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('avi')}`;
-            const command = `-i ${videoUri} -vcodec bmp ${outputUri}`;
+            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('mp4')}`;
+            const command = `-i ${videoUri} -vcodec hevc -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
             await FFmpegKit.execute(command);
             await FileSystem.deleteAsync(videoUri, { idempotent: true });
             return outputUri;
@@ -247,7 +253,7 @@ const HomeScreen = () => {
             const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('png')}`;
             const command = `-i ${imageUri} -compression_level 100 ${outputUri}`;
             await FFmpegKit.execute(command);
-            await FileSystem.deleteAsync(imageUri, { idempotent: true });  // Clean up original file
+            await FileSystem.deleteAsync(imageUri, { idempotent: true });
             return outputUri;
         } catch (error) {
             console.error('Error compressing image:', error);
@@ -260,7 +266,7 @@ const HomeScreen = () => {
             const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('jpg')}`;
             const command = `-i ${imageUri} -c bmp -compression rle ${outputUri}`;
             await FFmpegKit.execute(command);
-            await FileSystem.deleteAsync(imageUri, { idempotent: true });  // Clean up original file
+            await FileSystem.deleteAsync(imageUri, { idempotent: true });
             return outputUri;
         } catch (error) {
             console.error('Error compressing image:', error);
@@ -268,39 +274,27 @@ const HomeScreen = () => {
         }
     };
 
-    const compressAudioHuffmanCoding = async (recordings) => {
+    const compressAudioHuffmanCoding = async (audioFileUri) => {
         try {
-            const promises = recordings.map(async (recording, index) => {
-                const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('mp3')}`;
-                const command = `-i ${recording.file} -c:a libmp3lame -q:a ${outputUri}`;
-                await FFmpegKit.execute(command);
-                return {
-                    ...recording,
-                    file: outputUri,
-                };
-            });
-            const compressedRecordings = await Promise.all(promises);
-            setRecordings(compressedRecordings);
+            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('mp3')}`;
+            const command = `-i ${audioFileUri} -c:a libmp3lame -q:a 2 ${outputUri}`;
+            await FFmpegKit.execute(command);
+            return outputUri;
         } catch (error) {
             console.error('Error compressing audio:', error);
+            throw error;
         }
     };
 
-    const compressAudioEntropyCoding = async (recordings) => {
+    const compressAudioEntropyCoding = async (audioFileUri) => {
         try {
-            const promises = recordings.map(async (recording, index) => {
-                const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('flac')}`;
-                const command = `-i ${recording.file} -c:a flac ${outputUri}`;
-                await FFmpegKit.execute(command);
-                return {
-                    ...recording,
-                    file: outputUri,
-                };
-            });
-            const compressedRecordings = await Promise.all(promises);
-            setRecordings(compressedRecordings);
+            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('flac')}`;
+            const command = `-i ${audioFileUri} -c:a flac ${outputUri}`;
+            await FFmpegKit.execute(command);
+            return outputUri;
         } catch (error) {
             console.error('Error compressing audio:', error);
+            throw error;
         }
     };
 
@@ -371,11 +365,9 @@ const HomeScreen = () => {
                 )}
                 {selectedAudio && (
                     <View style={styles.audioPreviewContainer}>
-                        {recordings.map((recording, index) => (
-                            <View key={index} style={styles.audioPreview}>
-                                <Text style={styles.audioPreviewText}>{recording.name}</Text>
-                            </View>
-                        ))}
+                        <View style={styles.audioPreview}>
+                            <Text style={styles.audioPreviewText}>{selectedAudio.split('/').pop()}</Text>
+                        </View>
                     </View>
                 )}
                 {!selectedImage && !selectedAudio && !selectedVideo && recordings.length === 0 && (
