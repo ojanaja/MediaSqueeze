@@ -27,11 +27,9 @@ const HomeScreen = () => {
 
     console.info("Selected", selectedImage);
 
-    function getDurationFormatted(milliseconds) {
-        const minutes = milliseconds / 1000 / 60;
-        const seconds = Math.round((minutes - Math.floor(minutes)) * 60);
-        return seconds < 10 ? `${Math.floor(minutes)}:0${seconds}` : `${Math.floor(minutes)}:${seconds}`
-    }
+    const getRandomFileName = (extension) => {
+        return `${Math.random().toString(36).substring(2, 15)}_${Date.now()}_compressed_${selectedType}_${compressionMethod}.${extension}`;
+    };
 
     const openActionSheet = () => {
         actionSheetRef.current?.show();
@@ -96,28 +94,28 @@ const HomeScreen = () => {
         };
 
         if (selectedType === 'audio') {
-            alertOptions['FFMPEG'] = async () => {
-                await setCompressionAndHandle('lameMp3');
+            alertOptions['Huffman Coding'] = async () => {
+                await setCompressionAndHandle('huffmanCoding');
             };
 
-            alertOptions['DCT'] = async () => {
-                await setCompressionAndHandle('aac');
+            alertOptions['Entropy Coding'] = async () => {
+                await setCompressionAndHandle('entropyCoding');
             };
         } else if (selectedType === 'video') {
-            alertOptions['FFMPEG'] = async () => {
-                await setCompressionAndHandle('h264');
-            };
-
-            alertOptions['DCT'] = async () => {
-                await setCompressionAndHandle('h265');
-            };
-        } else if (selectedType === 'image') {
-            alertOptions['FFMPEG'] = async () => {
-                await setCompressionAndHandle('scalePad');
+            alertOptions['Entropy Coding'] = async () => {
+                await setCompressionAndHandle('entropyCoding');
             };
 
             alertOptions['RLE'] = async () => {
-                await setCompressionAndHandle('scalePad640');
+                await setCompressionAndHandle('RLE');
+            };
+        } else if (selectedType === 'image') {
+            alertOptions['Entropy Coding'] = async () => {
+                await setCompressionAndHandle('entropyCoding');
+            };
+
+            alertOptions['RLE'] = async () => {
+                await setCompressionAndHandle('RLE');
             };
         }
 
@@ -160,22 +158,22 @@ const HomeScreen = () => {
 
         try {
             if (selectedType === 'image' && selectedImage) {
-                if (compressionMethod === 'scalePad') {
-                    compressedUri = await compressImageScalePad(selectedImage);
-                } else if (compressionMethod === 'scalePad640') {
-                    compressedUri = await compressImageScalePad640(selectedImage);
+                if (compressionMethod === 'entropyCoding') {
+                    compressedUri = await compressImageEntropyCoding(selectedImage);
+                } else if (compressionMethod === 'RLE') {
+                    compressedUri = await compressImageRLE(selectedImage);
                 }
             } else if (selectedType === 'video' && selectedVideo) {
-                if (compressionMethod === 'h264') {
-                    compressedUri = await compressVideoH264(selectedVideo);
-                } else if (compressionMethod === 'h265') {
-                    compressedUri = await compressVideoH265(selectedVideo);
+                if (compressionMethod === 'entropyCoding') {
+                    compressedUri = await compressVideoEntropyCoding(selectedVideo);
+                } else if (compressionMethod === 'RLE') {
+                    compressedUri = await compressVideoRLE(selectedVideo);
                 }
             } else if (selectedType === 'audio' && selectedAudio) {
-                if (compressionMethod === 'lameMp3') {
-                    await compressAudioMp3([{ file: selectedAudio }]);
-                } else if (compressionMethod === 'aac') {
-                    await compressAudioAac([{ file: selectedAudio }]);
+                if (compressionMethod === 'huffmanCoding') {
+                    await compressAudioHuffmanCoding([{ file: selectedAudio }]);
+                } else if (compressionMethod === 'entropyCoding') {
+                    await compressAudioEntropyCoding([{ file: selectedAudio }]);
                 }
                 return;
             }
@@ -217,9 +215,9 @@ const HomeScreen = () => {
         }
     };
 
-    const compressVideoH264 = async (videoUri) => {
+    const compressVideoEntropyCoding = async (videoUri) => {
         try {
-            const outputUri = `${FileSystem.cacheDirectory}compressed_video.mp4`;
+            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('mp4')}`;
             const command = `-i ${videoUri} -vcodec h264 -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
             await FFmpegKit.execute(command);
             await FileSystem.deleteAsync(videoUri, { idempotent: true });
@@ -230,10 +228,10 @@ const HomeScreen = () => {
         }
     };
 
-    const compressVideoH265 = async (videoUri) => {
+    const compressVideoRLE = async (videoUri) => {
         try {
-            const outputUri = `${FileSystem.cacheDirectory}compressed_video.mp4`;
-            const command = `-i ${videoUri} -vcodec hevc -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
+            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('avi')}`;
+            const command = `-i ${videoUri} -vcodec bmp -compression rle ${outputUri}`;
             await FFmpegKit.execute(command);
             await FileSystem.deleteAsync(videoUri, { idempotent: true });
             return outputUri;
@@ -243,10 +241,10 @@ const HomeScreen = () => {
         }
     };
 
-    const compressImageScalePad = async (imageUri) => {
+    const compressImageEntropyCoding = async (imageUri) => {
         try {
-            const outputUri = `${FileSystem.cacheDirectory}compressed_image.jpg`;
-            const command = `-i ${imageUri} -vf "scale='if(gt(iw,ih),-1,iw):if(gt(ih,iw),-1,ih)',pad=ih:ih:(ow-iw)/2:(oh-ih)/2" ${outputUri}`;
+            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('png')}`;
+            const command = `-i ${imageUri} -compression_level 100 ${outputUri}`;
             await FFmpegKit.execute(command);
             await FileSystem.deleteAsync(imageUri, { idempotent: true });  // Clean up original file
             return outputUri;
@@ -256,9 +254,9 @@ const HomeScreen = () => {
         }
     };
 
-    const compressImageScalePad640 = async (imageUri) => {
+    const compressImageRLE = async (imageUri) => {
         try {
-            const outputUri = `${FileSystem.cacheDirectory}compressed_image.jpg`;
+            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('jpg')}`;
             const command = `-i ${imageUri} -c bmp -compression rle ${outputUri}`;
             await FFmpegKit.execute(command);
             await FileSystem.deleteAsync(imageUri, { idempotent: true });  // Clean up original file
@@ -269,11 +267,11 @@ const HomeScreen = () => {
         }
     };
 
-    const compressAudioMp3 = async (recordings) => {
+    const compressAudioHuffmanCoding = async (recordings) => {
         try {
             const promises = recordings.map(async (recording, index) => {
-                const outputUri = `${FileSystem.cacheDirectory}compressed_audio.mp3`;
-                const command = `-i ${recording.file} -c:a libmp3lame -q:a 2 ${outputUri}`;
+                const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('mp3')}`;
+                const command = `-i ${recording.file} -c:a libmp3lame -q:a ${outputUri}`;
                 await FFmpegKit.execute(command);
                 return {
                     ...recording,
@@ -287,11 +285,11 @@ const HomeScreen = () => {
         }
     };
 
-    const compressAudioAac = async (recordings) => {
+    const compressAudioEntropyCoding = async (recordings) => {
         try {
             const promises = recordings.map(async (recording, index) => {
-                const outputUri = `${FileSystem.cacheDirectory}compressed_audio.aac`;
-                const command = `-i ${recording.file} -c:a aac -b:a 192k ${outputUri}`;
+                const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('flac')}`;
+                const command = `-i ${recording.file} -c:a flac ${outputUri}`;
                 await FFmpegKit.execute(command);
                 return {
                     ...recording,
