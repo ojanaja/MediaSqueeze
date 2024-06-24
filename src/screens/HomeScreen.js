@@ -79,7 +79,6 @@ const HomeScreen = () => {
 
         if (result.type === 'success') {
             setSelectedAudio(result.uri);
-            setRecordings([...recordings, { uri: result.uri, name: result.name }]);
             setSelectedType('audio');
             closeActionSheet();
         } else {
@@ -217,8 +216,8 @@ const HomeScreen = () => {
 
     const compressVideoEntropyCoding = async (videoUri) => {
         try {
-            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('mp4')}`;
-            const command = `-i ${videoUri} -vcodec h264 -preset ultrafast -crf 28 -tune zerolatency ${outputUri}`;
+            const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('mkv')}`;
+            const command = `-i ${videoUri} -c:v ffv1 -level 3 ${outputUri}`;
             await FFmpegKit.execute(command);
             await FileSystem.deleteAsync(videoUri, { idempotent: true });
             return outputUri;
@@ -228,10 +227,11 @@ const HomeScreen = () => {
         }
     };
 
+
     const compressVideoRLE = async (videoUri) => {
         try {
             const outputUri = `${FileSystem.cacheDirectory}${getRandomFileName('avi')}`;
-            const command = `-i ${videoUri} -vcodec bmp -compression rle ${outputUri}`;
+            const command = `-i ${videoUri} -vcodec bmp ${outputUri}`;
             await FFmpegKit.execute(command);
             await FileSystem.deleteAsync(videoUri, { idempotent: true });
             return outputUri;
@@ -240,6 +240,7 @@ const HomeScreen = () => {
             return null;
         }
     };
+
 
     const compressImageEntropyCoding = async (imageUri) => {
         try {
